@@ -1,0 +1,37 @@
+import os
+import django
+import csv
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings")
+django.setup()
+
+from medicaments.models import Medicament
+
+FICHIER_BDPM = "bdpm/CIS_bdpm.txt"
+
+compteur = 0
+
+with open(FICHIER_BDPM, encoding="latin-1") as f:
+    reader = csv.reader(f, delimiter="\t")
+    for row in reader:
+        if len(row) < 2:
+            continue
+
+        cis = row[0].strip()
+        nom = row[1].strip()
+        forme = row[2].strip() if len(row) > 2 else ""
+        laboratoire = row[3].strip() if len(row) > 3 else ""
+
+        Medicament.objects.update_or_create(
+            cis=cis,
+            defaults={
+                "nom": nom,
+                "forme_pharmaceutique": forme,
+                "laboratoire": laboratoire,
+                "source_reglementaire": "BDPM",
+            }
+        )
+
+        compteur += 1
+
+print(f"{compteur} médicaments importés depuis la BDPM")
